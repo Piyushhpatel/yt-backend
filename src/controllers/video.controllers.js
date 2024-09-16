@@ -1,4 +1,3 @@
-import mongoose, { isValidObjectId } from "mongoose";
 import { Video } from "../models/video.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/AppError.js";
@@ -7,19 +6,57 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  // Algorithm
-  // 
 
-  const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+  const { page = 1, limit = 10, query, sortBy = "createdAt", sortType="desc", userId } = req.query;
   
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+
+  const piplieLine = [];
+
+  const user = req.user?._id;
+
+  if(!user){
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  if(userId){
+    piplieLine.push({
+      $match: {
+        owner: userId,
+      }
+    })
+  }
+
+  if(query) {
+    piplieLine.push({
+      $match: {
+        $or: [
+          {title: {$regex: query, $options: 'i'}},
+          {description: {$regex: query, $options: 'i'}}
+        ]
+      }
+    })
+  }
+
+  piplieLine.push({
+    $sort: {
+      [sortBy]: sortType == "asc" ? 1 : -1
+    }
+  })
+  
+
   const options = {
-    page: page,
-    limit: limit,
+    page: pageNum,
+    limit: limitNum
   }
 
 
+  const result = await Video.aggregatePaginate(piplieLine, options);
   
-
+  return res.status(200).json(
+    new ApiResponse(200, result, "Video Fetched successfully")
+  )
 
 });
 
