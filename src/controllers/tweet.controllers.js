@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import mongoose, { isValidObjectId } from "mongoose"
 import {Tweet} from "../models/tweet.model.js"
 import {User} from "../models/user.model.js"
@@ -108,3 +109,6 @@ export {
     updateTweet,
     deleteTweet
 }
+=======
+
+>>>>>>> 721af4c719860a70a6c5b4e536f3f730c04ac260
